@@ -1,18 +1,19 @@
 # The MIT License
-# 
+#
 # Copyright 2012 Mislav Marohnić <mislav.marohnic@gmail.com>.
 # Copyright 2014 Jakub Jirutka <jakub@jirutka.cz>.
-# 
+# Copyright 2020 James Ramsay <james@jramsay.com.au>.
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -48,6 +49,20 @@ module StyledYAML
     end
   end
 
+  # https://yaml.org/spec/1.2/spec.html#id2788097
+  module SingleQuotedScalar
+    def yaml_style
+      Psych::Nodes::Scalar::SINGLE_QUOTED
+    end
+  end
+
+  # https://yaml.org/spec/1.2/spec.html#id2787109
+  module DoubleQuotedScalar
+    def yaml_style
+      Psych::Nodes::Scalar::DOUBLE_QUOTED
+    end
+  end
+
   # http://www.yaml.org/spec/1.2/spec.html#id2796251
   module FoldedScalar
     def yaml_style
@@ -69,7 +84,6 @@ module StyledYAML
     end
   end
 
-
   # Custom tree builder class to recognize scalars tagged with `yaml_style`
   class TreeBuilder < Psych::TreeBuilder
 
@@ -82,7 +96,7 @@ module StyledYAML
     end
 
     def scalar(value, anchor, tag, plain, quoted, style)
-      if style_any?(style) && value.respond_to?(:yaml_style)
+      if value.respond_to?(:yaml_style)
         if style_literal_or_folded? value.yaml_style
           plain = false
           quoted = true
@@ -90,10 +104,6 @@ module StyledYAML
         style = value.yaml_style
       end
       super
-    end
-
-    def style_any?(style)
-      Psych::Nodes::Scalar::ANY == style
     end
 
     def style_literal_or_folded?(style)
@@ -137,7 +147,19 @@ module StyledYAML
     str
   end
 
-  # Tag Hashe or Array to be output all on one line.
+  # Tag string to be output using single quoted style.
+  def self.single_quoted(str)
+    str.extend(SingleQuotedScalar)
+    str
+  end
+
+  # Tag string to be output using double quoted style.
+  def self.double_quoted(str)
+    str.extend(DoubleQuotedScalar)
+    str
+  end
+
+  # Tag Hash or Array to be output all on one line.
   def self.inline(obj)
     case obj
     when Hash
@@ -153,7 +175,7 @@ module StyledYAML
   # A Psych.dump alternative that uses the custom TreeBuilder
   def self.dump(obj, io = nil, options = {})
     real_io = io || StringIO.new(''.encode('utf-8'))
-    visitor = YAMLTree.new(options, TreeBuilder.new)
+    visitor = YAMLTree.create(options, TreeBuilder.new)
 
     visitor << obj
     ast = visitor.tree
