@@ -1,0 +1,23 @@
+name: Test
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        ruby-version: [2.7.x, 2.6.x, 2.5.x]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Ruby ${{ matrix.ruby-version }}
+      uses: actions/setup-ruby@v1
+      with:
+        ruby-version: ${{ matrix.ruby-version }}
+    - run: |
+        gem install bundler
+        bundle install --jobs 4 --retry 3
+        bundle exec rspec
