@@ -1,26 +1,4 @@
-# The MIT License
-#
-# Copyright 2012 Mislav Marohnić <mislav.marohnic@gmail.com>.
-# Copyright 2014 Jakub Jirutka <jakub@jirutka.cz>.
-# Copyright 2020 James Ramsay <james@jramsay.com.au>.
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# frozen_string_literal: true
 
 require 'psych'
 require 'stringio'
@@ -41,7 +19,6 @@ require 'stringio'
 #
 
 module StyledYAML
-
   # http://www.yaml.org/spec/1.2/spec.html#id2795688
   module LiteralScalar
     def yaml_style
@@ -86,7 +63,6 @@ module StyledYAML
 
   # Custom tree builder class to recognize scalars tagged with `yaml_style`
   class TreeBuilder < Psych::TreeBuilder
-
     attr_writer :next_seq_or_map_style
 
     def next_seq_or_map_style(default_style)
@@ -110,7 +86,7 @@ module StyledYAML
       [Psych::Nodes::Scalar::LITERAL, Psych::Nodes::Scalar::FOLDED].include?(style)
     end
 
-    [:sequence, :mapping].each do |type|
+    %I[sequence mapping].each do |type|
       class_eval <<-RUBY
         def start_#{type}(anchor, tag, implicit, style)
           style = next_seq_or_map_style(style)
@@ -122,7 +98,7 @@ module StyledYAML
 
   # Custom tree class to handle Hashes and Arrays tagged with `yaml_style`.
   class YAMLTree < Psych::Visitors::YAMLTree
-    [:Hash, :Array, :Psych_Set, :Psych_Omap].each do |klass|
+    %I[Hash Array Psych_Set Psych_Omap].each do |klass|
       class_eval <<-RUBY
         def visit_#{klass}(o)
           if o.respond_to? :yaml_style
@@ -133,7 +109,6 @@ module StyledYAML
       RUBY
     end
   end
-
 
   # Tag string to be output using literal style.
   def self.literal(str)
