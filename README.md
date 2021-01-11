@@ -5,7 +5,7 @@ A Psych extension to enable choosing output styles for specific objects.
 ## Usage
 
 ```ruby
-require 'styled-yaml'
+require 'styled_yaml'
 require 'yaml'
 
 recipe = {

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 Gem::Specification.new do |spec|
-  spec.name        = 'styled-yaml'
+  spec.name        = 'styled_yaml'
   spec.summary     = 'A Psych extension to enable choosing output styles for specific objects.'
   spec.version     = '0.0.1'
   spec.authors     = ['James Ramsay']
