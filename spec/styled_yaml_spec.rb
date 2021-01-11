@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'yaml'
 require_relative '../lib/styled_yaml'
 
 RSpec.describe StyledYAML do
@@ -36,7 +37,10 @@ RSpec.describe StyledYAML do
           And this was odd, because it was
           The middle of the night.
       YAML
-      expect(StyledYAML.dump(data)).to eq(expected_output)
+
+      dump = StyledYAML.dump(data)
+      expect(dump).to eq(expected_output)
+      expect(YAML.safe_load(dump)['walrus']).to eq(walrus)
     end
   end
 
@@ -58,7 +62,9 @@ RSpec.describe StyledYAML do
 
           The middle of the night.
       YAML
-      expect(StyledYAML.dump(data)).to eq(expected_output)
+      dump = StyledYAML.dump(data)
+      expect(dump).to eq(expected_output)
+      expect(YAML.safe_load(dump)['walrus']).to eq(walrus)
     end
   end
 
@@ -69,30 +75,51 @@ RSpec.describe StyledYAML do
         ---
         jabberwocky: "Beware the Jabberwock, my son!"
       YAML
-      expect(StyledYAML.dump(data)).to eq(expected_output)
+      dump = StyledYAML.dump(data)
+      expect(dump).to eq(expected_output)
+      expect(YAML.safe_load(dump)['jabberwocky']).to eq(jabberwocky)
     end
   end
 
   describe '#single_quoted' do
     it 'dump returns Single Quoted Scalar' do
+      data = { 'jabberwocky' => StyledYAML.single_quoted(+jabberwocky) }
       expected_output = <<~YAML
         ---
         jabberwocky: 'Beware the Jabberwock, my son!'
       YAML
-      data = { 'jabberwocky' => StyledYAML.single_quoted(+jabberwocky) }
-      expect(StyledYAML.dump(data)).to eq(expected_output)
+      dump = StyledYAML.dump(data)
+      expect(dump).to eq(expected_output)
+      expect(YAML.safe_load(dump)['jabberwocky']).to eq(jabberwocky)
     end
   end
 
   describe '#inline' do
     it 'dump returns Flow Mapping for Hash' do
-      data = { 'example': StyledYAML.inline('name' => 'Steve', 'age' => 24) }
-      expect(StyledYAML.dump(data)).to eq("---\n:example: {name: Steve, age: 24}\n")
+      person = {
+        'name' => 'Steve',
+        'age' => 24
+      }
+      expected_output = <<~YAML
+        ---
+        person: {name: Steve, age: 24}
+      YAML
+      data = { 'person' => StyledYAML.inline(person) }
+      dump = StyledYAML.dump(data)
+      expect(dump).to eq(expected_output)
+      expect(YAML.safe_load(dump)['person']).to eq(person)
     end
 
     it 'dump returns Flow Sequence for Array' do
-      data = { 'example': StyledYAML.inline(%w[apples bananas oranges]) }
-      expect(StyledYAML.dump(data)).to eq("---\n:example: [apples, bananas, oranges]\n")
+      fruit = %w[apples bananas oranges]
+      expected_output = <<~YAML
+        ---
+        fruit: [apples, bananas, oranges]
+      YAML
+      data = { 'fruit' => StyledYAML.inline(fruit) }
+      dump = StyledYAML.dump(data)
+      expect(dump).to eq(expected_output)
+      expect(YAML.safe_load(dump)['fruit']).to eq(fruit)
     end
   end
 end
